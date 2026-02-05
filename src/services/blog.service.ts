@@ -1,15 +1,23 @@
 import { env } from "@/env";
+import { cookies } from "next/headers";
 
 const BACKEND_URL = env.BACKEND_URL;
 
 interface GetBlogParams {
   isFeatured?: boolean;
   search?: string;
+  page?: string;
 }
 
 interface ServiceOptions {
   cache?: RequestCache;
   relavilated?: number;
+}
+
+export interface BlogData {
+  title: string;
+  content: string;
+  tag?: string[];
 }
 export const blogService = {
   getBlogPosts: async function (
@@ -37,8 +45,14 @@ export const blogService = {
       if (options?.relavilated) {
         config.next = { revalidate: options.relavilated };
       }
+      config.next = { ...config.next, tags: ["blogPosts"] };
 
       const res = await fetch(url.toString(), config);
+      // const res = await fetch(url.toString(), {
+      //   next: {
+      //     tags: ["blogPosts"],
+      //   },
+      // });
 
       if (!res.ok) {
         throw new Error("Failed to fetch posts");
@@ -79,16 +93,33 @@ export const blogService = {
       return { data: null, error: { message: "Something Went Wrong" } };
     }
   },
-  //   getBlogById: async function (id: string) {
-  //     try {
-  //       const url = new URL(`${BACKEND_URL}/posts`);
-  //       const res = await fetch(`${url}/posts/${id}`);
-  //       const data = await res.json();
 
-  //       return { data: data, error: null };
-  //     } catch (err) {
-  //       console.error(err);
-  //       return { data: null, error: { message: "Something Went Wrong" } };
-  //     }
-  //   },
+  createBlogPost: async (blogData: BlogData) => {
+    try {
+      const cookieStore = await cookies();
+
+      const res = await fetch(`${BACKEND_URL}/posts`, {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+          Cookie: cookieStore.toString(),
+        },
+        body: JSON.stringify(blogData),
+      });
+      const data = await res.json();
+      if (data.error) {
+        return {
+          data: null,
+          error: { message: data.error || "ERROR: Post Not Created" },
+        };
+      }
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: "something went wrong",
+        },
+      };
+    }
+  },
 };

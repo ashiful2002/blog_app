@@ -3,9 +3,7 @@ import type { BlogPost } from "@/types";
 import { Eye, MessageCircle, Calendar, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-
-
-// disable dynamic params to enable static generation   
+// disable dynamic params to enable static generation
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
@@ -16,6 +14,7 @@ export async function generateStaticParams() {
 const BlogPost = async ({ params }: { params: Promise<{ id: string }> }) => {
   const { id } = await params;
   const { data: blog } = await blogService.getBlogById(id);
+
   return (
     <section className="max-w-4xl mx-auto px-4 py-10">
       {/* Back button */}
